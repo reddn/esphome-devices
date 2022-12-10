@@ -14,7 +14,7 @@ Converted from [Tasmota](https://templates.blakadder.com/etekcity_ES015-TB.html)
 Remove the four phillips head screws and remove the plastic clamshell.
 Then, remove a few more screws to remove the circuitry from the plastic enclosure.
 The Rx, Tx, 3.3v, and Ground solder pads will then be visible to use.
-GPIO0 (Pin 8) must be grounded on boot to place the device into boot loader mode.
+GPIO0 (Pin 8, labelled as testpoint T11 on some, see picture below) must be grounded on boot to place the device into boot loader mode.
 
 ## GPIO Pinout
 
