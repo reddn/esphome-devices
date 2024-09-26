@@ -3,6 +3,7 @@ title: Shelly 2.5
 date-published: 2020-05-08
 type: relay
 standard: uk, us, eu
+board: esp8266
 ---
 
 ## GPIO Pinout
@@ -15,7 +16,7 @@ standard: uk, us, eu
 | GPIO5  | Switch 2 Input                  |
 | GPIO12 | i2c SDA                         |
 | GPIO13 | Switch 1 Input                  |
-| GPIO14 | 12c SCL                         |
+| GPIO14 | i2c SCL                         |
 | GPIO15 | Relay 2                         |
 | GPIO16 | ADE7953 IRQ (power measurement) |
 | GPIOA0 | Internal Temperature            |
@@ -58,7 +59,7 @@ i2c:
   scl: GPIO14
 
 sensor:
-  - platform: ade7953
+  - platform: ade7953_i2c
     irq_pin: GPIO16 # Prevent overheating by setting this
     voltage:
       name: ${devicename} Voltage
@@ -125,12 +126,16 @@ switch:
     pin: GPIO4
     icon: "mdi:electric-switch"
     restore_mode: RESTORE_DEFAULT_OFF
+    # Ensure only one switch at a time is on (https://esphome.io/components/switch/gpio.html#interlocking)
+    interlock: &interlock_group [shelly_relay_1, shelly_relay_2]
+
   - platform: gpio
     id: shelly_relay_2
     name: ${devicename} Relay2
     pin: GPIO15
     icon: "mdi:electric-switch"
     restore_mode: RESTORE_DEFAULT_OFF
+    interlock: *interlock_group
 ```
 
 ## Configuration as relay with overpower and overtemperature protection
@@ -188,7 +193,8 @@ logger:
 
 # Enable Home Assistant API
 api:
-  password: ${password}
+  encryption:
+    key: !secret encryption_key
 
 ota:
   password: ${password}
@@ -205,7 +211,7 @@ i2c:
   scl: GPIO14
 
 sensor:
-  - platform: ade7953
+  - platform: ade7953_i2c
     irq_pin: GPIO16 # Prevent overheating by setting this
     voltage:
       name: ${devicename} voltage
@@ -307,12 +313,16 @@ switch:
     pin: GPIO4
     icon: "mdi:electric-switch"
     restore_mode: RESTORE_DEFAULT_OFF
+    # Ensure only one switch at a time is on (https://esphome.io/components/switch/gpio.html#interlocking)
+    interlock: &interlock_group [shelly_relay_1, shelly_relay_2]
+
   - platform: gpio
     id: shelly_relay_2
     name: ${channel_2} relay
     pin: GPIO15
     icon: "mdi:electric-switch"
     restore_mode: RESTORE_DEFAULT_OFF
+    interlock: *interlock_group
 
 binary_sensor:
   - platform: gpio
@@ -369,7 +379,7 @@ i2c:
   scl: GPIO14
 
 sensor:
-  - platform: ade7953
+  - platform: ade7953_i2c
     irq_pin: GPIO16 # Prevent overheating by setting this
     voltage:
       name: ${devicename} Voltage
@@ -511,7 +521,8 @@ logger:
 
 # Enable Home Assistant API
 api:
-  password: ${password}
+  encryption:
+    key: !secret encryption_key
 
 ota:
   password: ${password}
@@ -528,7 +539,7 @@ i2c:
   scl: GPIO14
 
 sensor:
-  - platform: ade7953
+  - platform: ade7953_i2c
     irq_pin: GPIO16 # Prevent overheating by setting this
     voltage:
       name: ${devicename} voltage

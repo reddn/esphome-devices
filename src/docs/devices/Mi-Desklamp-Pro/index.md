@@ -3,24 +3,58 @@ title: Xiaomi Mi Smart LED Desk Lamp Pro
 date-published: 2021-09-09
 type: light
 standard: eu
+board: esp32
 ---
+## Install ESPHome on Xiaomi Mi Smart LED Desk Lamp Pro
+
+### Materials
+
+To install ESPHome onto your Lamp you need
+
+- Soldering iron
+- Serial to USB stick
+- 3 Volt Power from extern or the Serial-USB
+
+### Open the Device
+
+Unplug your Lamp and remove the screw under the rubber feet. Marked in the picture.
+
+![a Picture of the four screws and where they are placed under the rubber feet.](screws_Image.jpg "a Picture of the four screws and where they are placed under the rubber feet.")
+
+### Solder your debugger onto the Board
+
+Plugin the 3Volts last.
+
+![a Picture of the soldering spots to connect the Serial USB.](board_Image.jpg "a Picture of the soldering spots to connect the Serial USB.")
+
+### (Optional) backup old Firmware
+
+If you want to backup the old firmware just use esptool.
+
+Just replace COM or ttyUSB.
+
+#### Linux
+
+```batch
+python3 -m esptool -b 115200 --port /dev/ttyUSB0 read_flash 0x00000 0x400000 your/folder/firmwaredump.bin
+```
+
+#### Windows
+
+```batch
+python.exe -m esptool -b 115200 --port COM3 read_flash 0x00000 0x400000 your/folder/firmwaredump.bin
+```
+
+## Recommended Config
 
 ```yaml
 esphome:
   name: midesklamppro
 
-# PLEASE NOTE:
-#
-# It's only possible to build this firmware on x86_64/amd64 machine due to limitations of ESP-IDF toolchain.
-# Firmware for this particular ESP32 chip in Mi Desk Lamp Pro should be built with 1 CPU core disabled and MAC CRC check bypassed.
-#
-# You may also want to temporarily replace !secrets with hardcoded strings for the first build.
-
 esp32:
   board: esp32doit-devkit-v1
   framework:
     type: esp-idf
-    version: recommended
     sdkconfig_options:
       CONFIG_FREERTOS_UNICORE: y
     advanced:
@@ -35,7 +69,8 @@ logger:
 
 api:
   reboot_timeout: 0s
-  password: !secret password
+  encryption:
+    key: !secret encryption_key
 
 ota:
   password: !secret password
@@ -82,19 +117,42 @@ binary_sensor:
       mode: INPUT_PULLDOWN
     on_click:
       then:
-        - light.toggle: light1
+        - light.toggle:
+            id: light1
+            transition_length: 0.5s
+    filters:
+      - delayed_off: 5ms
+
+number:
+  - id: freq1
+    name: "Flicker Frequency"
+    icon: "mdi:sine-wave"
+    unit_of_measurement: "Hz"
+    platform: template
+    min_value: 0
+    max_value: 100000
+    initial_value: 100000
+    mode: box
+    step: 1
+    set_action:
+      - output.ledc.set_frequency:
+          id: output_cw
+          frequency: !lambda return x;
+      - output.ledc.set_frequency:
+          id: output_ww
+          frequency: !lambda return x;
 
 output:
   - platform: ledc
     pin: GPIO2
     id: output_cw
     power_supply: power
-    frequency: 10000Hz
+    frequency: 100000Hz
   - platform: ledc
     pin: GPIO4
     id: output_ww
     power_supply: power
-    frequency: 10000Hz
+    frequency: 100000Hz
 
 power_supply:
   - id: power
@@ -105,9 +163,9 @@ power_supply:
 light:
   - platform: cwww
     id: light1
+    name: "Mi Desk Lamp Pro"
     default_transition_length: 0s
     constant_brightness: true
-    name: "Mi Desk Lamp Pro"
     cold_white: output_cw
     warm_white: output_ww
     cold_white_color_temperature: 4800 K

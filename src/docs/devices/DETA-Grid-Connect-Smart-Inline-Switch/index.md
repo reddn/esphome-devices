@@ -1,9 +1,10 @@
 ---
-title: DETA Grid Connect Smart Inline Switch
+title: DETA Grid Connect Smart Inline Switch 6000HA
 date-published: 2021-06-13
 type: plug
 
 standard: au
+board: esp8266
 ---
 
 ## General Notes
